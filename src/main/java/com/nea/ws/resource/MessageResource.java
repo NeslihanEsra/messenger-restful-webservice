@@ -13,10 +13,14 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
 import javax.xml.crypto.URIReferenceException;
+
+import org.glassfish.jersey.server.Uri;
 
 import com.nea.ws.model.Message;
 import com.nea.ws.resource.bean.MessageFilterBean;
@@ -24,7 +28,7 @@ import com.nea.ws.service.MessageService;
 
 @Path("/messages")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@Consumes(value = {MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
 public class MessageResource {
 	
 	private MessageService messageService = new MessageService();
@@ -42,15 +46,28 @@ public class MessageResource {
 
 	@GET
 	@Path("/{messageId}")
-	public Message getMessage(@PathParam("messageId") Long id) {
-		return messageService.getMessage(id);
+	public Message getMessage(@PathParam("messageId") Long id, @Context UriInfo uriInfo) {
+		Message message = messageService.getMessage(id);
+		message.addLink(getUriForSelf(uriInfo, message), "self");	
+		return message;	
 	}
+
+	private String getUriForSelf(UriInfo uriInfo, Message message) {
+		return uriInfo.getBaseUriBuilder()
+							.path(MessageResource.class)
+							.path(String.valueOf(message.getId()))
+							.build()
+							.toString();
+	}
+
 	
 	@POST
-	public Response addMessage(Message message) throws URISyntaxException{
+	public Response addMessage(Message message, @Context UriInfo uriInfo){
 		Message newMessage = messageService.addMessage(message);
-		return Response.status(Status.CREATED)
-				       //.created(new URI("/messengerwebapi/api/messages/") + newMessage.getId())
+		String newId = String.valueOf(message.getId());
+		URI uri = uriInfo.getAbsolutePathBuilder().path(newId).build();
+		return Response //.status(Status.CREATED)
+				       .created(uri)
 					   .entity(newMessage)
 					   .build();
 	}
