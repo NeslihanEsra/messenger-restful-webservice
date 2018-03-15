@@ -1,5 +1,7 @@
 package com.nea.ws.resource;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import javax.ws.rs.BeanParam;
@@ -14,6 +16,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.xml.crypto.URIReferenceException;
 
 import com.nea.ws.model.Message;
 import com.nea.ws.resource.bean.MessageFilterBean;
@@ -44,9 +47,10 @@ public class MessageResource {
 	}
 	
 	@POST
-	public Response addMessage(Message message) {
+	public Response addMessage(Message message) throws URISyntaxException{
 		Message newMessage = messageService.addMessage(message);
 		return Response.status(Status.CREATED)
+				       //.created(new URI("/messengerwebapi/api/messages/") + newMessage.getId())
 					   .entity(newMessage)
 					   .build();
 	}
