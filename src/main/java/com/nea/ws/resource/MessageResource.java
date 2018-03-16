@@ -1,7 +1,6 @@
 package com.nea.ws.resource;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 
 import javax.ws.rs.BeanParam;
@@ -16,19 +15,15 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
-import javax.xml.crypto.URIReferenceException;
-
-import org.glassfish.jersey.server.Uri;
 
 import com.nea.ws.model.Message;
 import com.nea.ws.resource.bean.MessageFilterBean;
 import com.nea.ws.service.MessageService;
 
 @Path("/messages")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(value = {MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
+@Produces(value = {MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
+@Consumes(MediaType.APPLICATION_JSON)
 public class MessageResource {
 	
 	private MessageService messageService = new MessageService();
@@ -49,7 +44,28 @@ public class MessageResource {
 	public Message getMessage(@PathParam("messageId") Long id, @Context UriInfo uriInfo) {
 		Message message = messageService.getMessage(id);
 		message.addLink(getUriForSelf(uriInfo, message), "self");	
+		message.addLink(getUriForProfile(uriInfo, message), "profile");	
+		message.addLink(getUriForComment(uriInfo, message), "comment");	
 		return message;	
+	}
+
+	private String getUriForComment(UriInfo uriInfo, Message message) {
+		return uriInfo.getBaseUriBuilder()
+					  .path(MessageResource.class)
+					  .path(MessageResource.class, "getCommentResource")
+					  .path(CommentResource.class)
+					  .resolveTemplate("messageId", message.getId())
+					  .build()
+					  .toString();
+	}
+
+	private String getUriForProfile(UriInfo uriInfo, Message message) {
+		return uriInfo.getBaseUriBuilder()
+					  .path(ProfileResource.class)
+					  .path(message.getAuthor())
+					  .build()
+					  .toString();
+		 
 	}
 
 	private String getUriForSelf(UriInfo uriInfo, Message message) {

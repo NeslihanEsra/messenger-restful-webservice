@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.nea.ws.database.DatabaseOperaitons;
+import com.nea.ws.exception.DataNotFoundException;
 import com.nea.ws.model.Message;
 
 public class MessageService {
@@ -22,7 +23,11 @@ public class MessageService {
 	}
 
 	public Message getMessage(Long id) {
-		return messages.get(id);
+		Message message = messages.get(id);
+		if (message == null) {
+			throw new DataNotFoundException("Message with id " + id + " not found");
+		}
+		return message;
 	}
 
 	public Message addMessage(Message message) {
